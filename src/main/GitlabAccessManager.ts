@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { Gitlab, ProjectSchema } from "gitlab";
+import { Gitlab, ProjectSchema, UserSchema } from "gitlab";
 import { AccessLevel } from "gitlab/dist/types/core/templates";
 
 dotenv.config();
@@ -27,11 +27,8 @@ export class GitlabAccessManager {
 
     private async addSupervisorsToProject(projectId: number, supervisors: string[]) {
         for (let supervisor of supervisors) {
-            let users: any = await gitlab.Users.search(supervisor);
-            if (users.length == 0) {
-                console.log(`Warning: Could not find user ${supervisor} by name`);
-            } else {
-                let user = users[0];
+            let user = await this.searchForUser(supervisor);
+            if (user) {
                 try {
                     await gitlab.ProjectMembers.add(projectId, user.id, 40);
                     console.log(`Added User ${supervisor} to project`);
@@ -39,7 +36,23 @@ export class GitlabAccessManager {
                     console.log(`Warning: Could not add user ${supervisor} to project ${projectId}`);
                     console.log(error);
                 }
+            } else {
+                console.log(`Warning: Could not find user ${supervisor} by name`);
             }
         }
+    }
+
+    private async searchForUser(userName: string): Promise<UserSchema | null> {
+        let users: UserSchema[] = await gitlab.Users.search(userName) as UserSchema[];
+        if (users.length == 0) {
+            return null;
+        }
+
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].username === userName) {
+                return users[i];
+            }
+        }
+        return null;
     }
 }

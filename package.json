@@ -1,5 +1,5 @@
 {
-  "name": "gitlab-access-revoker",
+  "name": "access-manager",
   "version": "0.1.0",
   "description": "",
   "main": "main.js",
