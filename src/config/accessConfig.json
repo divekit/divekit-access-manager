@@ -1,0 +1,12 @@
+{
+    "groupIds": [
+        420,
+        421
+    ],
+    "supervisors": [ 
+        "user1", 
+        "user2", 
+        "user3", 
+        "user4"
+    ]
+}
