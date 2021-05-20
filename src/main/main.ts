@@ -4,4 +4,9 @@ import * as accessConfig from '../config/accessConfig.json';
 
 
 let gitlabAccessManager: GitlabAccessManager = new GitlabAccessManager();
-gitlabAccessManager.addSupervisorsToGroups(accessConfig.groupIds, accessConfig.supervisors);
+if (accessConfig.supervisorMode) {
+    gitlabAccessManager.addSupervisorsToGroups(accessConfig.groupIds, accessConfig.supervisors);
+} else {
+    gitlabAccessManager.manageLearnerAccessForGroups(accessConfig.groupIds, accessConfig.authorizeLearners, accessConfig.supervisors);
+}
+

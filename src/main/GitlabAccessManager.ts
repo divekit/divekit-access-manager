@@ -21,19 +21,19 @@ export class GitlabAccessManager {
         console.log(`Starting to add supervisors to group ${groupId}`);
         let projects = await gitlab.GroupProjects.all(groupId);
         for (let project of projects) {
-            await this.addSupervisorsToProject(project.id, supervisors);
+            await this.addSupervisorsToProject(project, supervisors);
         }
     }
 
-    private async addSupervisorsToProject(projectId: number, supervisors: string[]) {
+    private async addSupervisorsToProject(project: ProjectSchema, supervisors: string[]) {
         for (let supervisor of supervisors) {
             let user = await this.searchForUser(supervisor);
             if (user) {
                 try {
-                    await gitlab.ProjectMembers.add(projectId, user.id, 40);
+                    await gitlab.ProjectMembers.add(project.id, user.id, 40);
                     console.log(`Added User ${supervisor} to project`);
                 } catch (error) {
-                    console.log(`Warning: Could not add user ${supervisor} to project ${projectId}`);
+                    console.log(`Warning: Could not add user ${supervisor} to project ${project.web_url}`);
                     console.log(error);
                 }
             } else {
@@ -54,5 +54,39 @@ export class GitlabAccessManager {
             }
         }
         return null;
+    }
+
+    public async manageLearnerAccessForGroups(groupIds: number[], authorizeLearners: boolean, supervisors: string[]) {
+        for (let groupId of groupIds) {
+            await this.manageLearnerAccessForGroup(groupId, authorizeLearners, supervisors);
+        }
+    }
+
+    public async manageLearnerAccessForGroup(groupId: number, authorizeLearners: boolean, supervisors: string[]) {
+        console.log(`Starting to manage learner access on group ${groupId}`);
+        let projects = await gitlab.GroupProjects.all(groupId);
+        for (let project of projects) {
+            await this.manageLearnerAccessForProject(project, authorizeLearners, supervisors);
+        }
+    }
+
+    private async manageLearnerAccessForProject(project: ProjectSchema, authorizeLearners: boolean, supervisors: string[]) {
+        try { 
+            let users: UserSchema[] = await gitlab.ProjectMembers.all(project.id) as UserSchema[];
+            for (let user of users) {
+                if (!supervisors.includes(user.username)) {
+                    await gitlab.ProjectMembers.edit(project.id, user.id, this.getAccessLevel(authorizeLearners));
+                }
+            }
+            console.log("Changed access on project");
+        } catch (error) {
+            console.log("An error occurred while changing access on project " + project.web_url);
+            console.log(error);
+            return;
+        }  
+    }
+
+    private getAccessLevel(authorizeLearners: boolean): AccessLevel {
+        return authorizeLearners ? 40 : 10;
     }
 }

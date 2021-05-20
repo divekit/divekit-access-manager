@@ -1,12 +1,14 @@
 {
-    "groupIds": [
-        420,
-        421
-    ],
+    "supervisorMode": true,
     "supervisors": [ 
         "user1", 
         "user2", 
         "user3", 
         "user4"
+    ],
+    "authorizeLearners": true,
+    "groupIds": [
+        420,
+        421
     ]
 }
